@@ -18,7 +18,7 @@ from utils import mfccs_and_spec
 
 class SpeakerDatasetTIMIT(Dataset):
     
-    def __init__(self):
+    def __init__(self, hp=hp):
 
         if hp.training:
             self.path = hp.data.train_path_unprocessed
@@ -35,7 +35,7 @@ class SpeakerDatasetTIMIT(Dataset):
     def __getitem__(self, idx):
         
         speaker = self.speakers[idx]
-        wav_files = glob.glob(speaker+'/*.WAV')
+        wav_files = glob.glob(speaker+'/*.wav')
         shuffle(wav_files)
         wav_files = wav_files[0:self.utterance_number]
         
@@ -47,7 +47,7 @@ class SpeakerDatasetTIMIT(Dataset):
 
 class SpeakerDatasetTIMITPreprocessed(Dataset):
     
-    def __init__(self, shuffle=True, utter_start=0):
+    def __init__(self, shuffle=True, utter_start=0, hp=hp):
         
         # data path
         if hp.training:
@@ -83,3 +83,32 @@ class SpeakerDatasetTIMITPreprocessed(Dataset):
 
         utterance = torch.tensor(np.transpose(utterance, axes=(0,2,1)))     # transpose [batch, frames, n_mels]
         return utterance
+
+
+class SpeakerDataset(Dataset):   
+    def __init__(self, hp=hp):
+
+        if hp.training:
+            self.path = hp.data.train_path_unprocessed
+            self.utterance_number = hp.train.M
+        else:
+            self.path = hp.data.test_path_unprocessed
+            self.utterance_number = hp.test.M
+        self.speakers = glob.glob(os.path.dirname(self.path))
+        shuffle(self.speakers)
+        
+    def __len__(self):
+        return len(self.speakers)
+
+    def __getitem__(self, idx):
+        
+        speaker = self.speakers[idx]
+        wav_files = glob.glob(speaker+'/*.wav')
+        shuffle(wav_files)
+        wav_files = wav_files[0:self.utterance_number]
+        
+        mel_dbs = []
+        for f in wav_files:
+            _, mel_db, _ = mfccs_and_spec(f, wav_process = True)
+            mel_dbs.append(mel_db)
+        return torch.Tensor(mel_dbs)

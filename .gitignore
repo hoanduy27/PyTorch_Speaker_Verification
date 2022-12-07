@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 **/test/
 **/test_tisv/
 **/train_tisv/
 **/__pycache__/
 **/vivos_noise/
 **/vivos/
-=======
-./test/
-./test_tisv/
-./train_tisv/
-./speech_id_checkpoint/
->>>>>>> parent of e47c47e (add inference function and generate test audio)

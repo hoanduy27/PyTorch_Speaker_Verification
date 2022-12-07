@@ -4,10 +4,10 @@ unprocessed_data: '../vivos/train/waves/*/*.wav'
 ---
 data:
     train_path: './train_tisv'
-    train_path_unprocessed: './test/enroll/*/'
+    train_path_unprocessed: '/mnt/d/duy/data/vivos/train/waves/*/*.wav'
     test_path: './test_tisv'
-    test_path_unprocessed: './test/pred/*/'
-    data_preprocessed: !!bool "false" 
+    test_path_unprocessed: '/mnt/d/duy/data/vivos/test/waves/*/*.wav'
+    data_preprocessed: !!bool "true" 
     sr: 16000
     nfft: 512 #For mel spectrogram preprocess
     window: 0.025 #(s)

@@ -1,5 +1,5 @@
 training: !!bool "false"
-device: "gpu"
+device: "cuda"
 unprocessed_data: '../vivos/train/waves/*/*.wav'
 ---
 data:
@@ -14,17 +14,18 @@ data:
     hop: 0.01 #(s)
     nmels: 40 #Number of mel energies
     tisv_frame: 180 #Max number of time steps in input after preprocess
+    durations: 4 #Max length of audio
 ---   
 model:
     hidden: 768 #Number of LSTM hidden layer units
     num_layer: 3 #Number of LSTM layers
     proj: 256 #Embedding size
-    model_path: './speech_id_checkpoint/final_epoch_3000_batch_id_4.model' #Model path for testing, inference, or resuming training
+    model_path: './speech_id_checkpoint/final_epoch_6000_batch_id_4.model' #Model path for testing, inference, or resuming training
 ---
 train:
     N : 1 #Number of speakers in batch
     M : 3 #Number of utterances per speaker
-    num_workers: 0 #number of workers for dataloader
+    num_workers: 8 #number of workers for dataloader
     lr: 0.01 
     epochs: 950 #Max training speaker epoch 
     log_interval: 30 #Epochs before printing progress

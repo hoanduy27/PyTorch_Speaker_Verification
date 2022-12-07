@@ -135,22 +135,40 @@ def normalize_0_1(values, max_value, min_value):
     normalized = np.clip((values - min_value) / (max_value - min_value), 0, 1)
     return normalized
 
+def padding_audio(sound_file, timesteps):
+    timestep_padding = hp.data.durations*hp.data.sr - timesteps
+    left_padding = timestep_padding//2
+    right_padding = timestep_padding - left_padding
+    
+    return np.pad(array=sound_file, pad_width=(left_padding, right_padding))
+    
+def processed_audio(sound_file):
+    timesteps = len(sound_file)
+    if timesteps >= hp.data.durations*hp.data.sr:
+        start = int((timesteps//2) - (hp.data.durations/2)*hp.data.sr)
+        end = int((timesteps//2) + (hp.data.durations/2)*hp.data.sr)
+        sound_file = sound_file[start:end]
+    else:
+        sound_file = padding_audio(sound_file, timesteps)
+    
+    return sound_file
+
 def mfccs_and_spec(wav_file, wav_process = False, calc_mfccs=False, calc_mag_db=False):    
     sound_file, _ = librosa.core.load(wav_file, sr=hp.data.sr)
     window_length = int(hp.data.window*hp.data.sr)
     hop_length = int(hp.data.hop*hp.data.sr)
-    duration = hp.data.tisv_frame * hp.data.hop + hp.data.window
+    # duration = hp.data.tisv_frame * hp.data.hop + hp.data.window
     
     # Cut silence and fix length
     if wav_process == True:
-        sound_file, index = librosa.effects.trim(sound_file, frame_length=window_length, hop_length=hop_length)
-        length = int(hp.data.sr * duration)
-        sound_file = librosa.util.fix_length(sound_file, length)
-        
+        sound_file, index = librosa.effects.trim(sound_file, top_db=10, frame_length=window_length, hop_length=hop_length)
+        sound_file = processed_audio(sound_file)
+        # length = int(hp.data.sr * duration)
+        # sound_file = librosa.util.fix_length(sound_file, length)
     spec = librosa.stft(sound_file, n_fft=hp.data.nfft, hop_length=hop_length, win_length=window_length)
     mag_spec = np.abs(spec)
     
-    mel_basis = librosa.filters.mel(hp.data.sr, hp.data.nfft, n_mels=hp.data.nmels)
+    mel_basis = librosa.filters.mel(sr=hp.data.sr, n_fft=hp.data.nfft, n_mels=hp.data.nmels)
     mel_spec = np.dot(mel_basis, mag_spec)
     
     mag_db = librosa.amplitude_to_db(mag_spec)

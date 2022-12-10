@@ -46,7 +46,7 @@ class Dotdict(dict):
 
 class Hparam(Dotdict):
 
-    def __init__(self, file='config/config.yaml'):
+    def __init__(self, file='config/vivos_config.yaml'):
         super(Dotdict, self).__init__()
         hp_dict = load_hparam(file)
         hp_dotdict = Dotdict(hp_dict)

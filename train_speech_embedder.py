@@ -10,7 +10,10 @@ import os
 import random
 import time
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
+from tqdm import tqdm
 
 import hparam
 from hparam import hparam as hp
@@ -67,7 +70,7 @@ def train(model_path):
             
             total_loss = total_loss + loss
             iteration += 1
-            if (batch_id + 1) % hp.train.log_interval == 0:
+            if (e + 1) % hp.train.log_interval == 0:
                 mesg = "{0}\tEpoch:{1}[{2}/{3}],Iteration:{4}\tLoss:{5:.4f}\tTLoss:{6:.4f}\t\n".format(time.ctime(), e+1,
                         batch_id+1, len(train_dataset)//hp.train.N, iteration,loss, total_loss / (batch_id + 1))
                 print(mesg)
@@ -154,7 +157,7 @@ def test(model_path):
     avg_EER = avg_EER / hp.test.epochs
     print("\n EER across {0} epochs: {1:.4f}".format(hp.test.epochs, avg_EER))
 
-def inference(model_path, hp):
+def inference(model_path):
     hp.training=True 
     enroll_set = SpeakerDatasetTIMIT(hp)
     enroll_dl = DataLoader(enroll_set, batch_size=hp.train.N, shuffle=True, num_workers=hp.test.num_workers, drop_last=True)
@@ -203,24 +206,75 @@ def inference(model_path, hp):
                 FAR = (sum([sim_matrix_thresh[i].float().sum()-sim_matrix_thresh[i,:,i].float().sum() for i in range(int(hp.test.N))])
                 /(hp.test.N-1.0)/(float(hp.test.M/2))/hp.test.N)
     
-                FRR = (sum([hp.test.M/2-sim_matrix_thresh[i,:,i].float().sum() for i in range(int(hp.test.N))])
-                /(float(hp.test.M/2))/hp.test.N)
+    enrollment_embeddings = embedder_net(enrollment_batch)
+    verification_embeddings = embedder_net(verification_batch)
+
+    enrollment_embeddings = torch.unsqueeze(enrollment_embeddings, 0)
+    verification_embeddings = torch.unsqueeze(verification_embeddings, 0)
+
+    enrollment_centroids = get_centroids(enrollment_embeddings)
+
+    embedding_flat = torch.flatten(verification_embeddings)
+    centroid_flat = torch.flatten(enrollment_centroids)
+
+    # print(embedding_flat.shape)
+    # print(centroid_flat.shape)
+    # raise
+
+    distance = F.cosine_similarity(embedding_flat, centroid_flat, 0)
+    print(distance)
+    
+    
+def inference_vivos(model_path):
+    
+    hp.training=True 
+    vivos_set_enroll = SpeakerDatasetTIMIT(hp)
+    enroll_dl = DataLoader(vivos_set_enroll, batch_size=hp.train.N, shuffle=True, num_workers=hp.test.num_workers, drop_last=True)
+    hp.training= False 
+    vivos_set_pred = SpeakerDatasetTIMIT(hp)
+    predict_dl = DataLoader(vivos_set_pred, batch_size=hp.test.N, shuffle=True, num_workers=hp.test.num_workers, drop_last=True)
+
+    embedder_net = SpeechEmbedder()
+    embedder_net.load_state_dict(torch.load(model_path))
+    embedder_net.eval()
+    
+    same_person_result = []
+    different_person_result = []
+    for e in range(hp.test.epochs):
+        for enrollment_batch, speaker_enrollment in enroll_dl:
+            for verification_batch, speaker_verification in predict_dl:
+
+                enrollment_batch = torch.squeeze(enrollment_batch, 0)
+                verification_batch = torch.squeeze(verification_batch, 0)
                 
-                # Save threshold when FAR = FRR (=EER)
-                if diff> abs(FAR-FRR):
-                    diff = abs(FAR-FRR)
-                    EER = (FAR+FRR)/2
-                    EER_thresh = thres
-                    EER_FAR = FAR
-                    EER_FRR = FRR
-            batch_avg_EER += EER
-            print("\nEER : %0.2f (thres:%0.2f, FAR:%0.2f, FRR:%0.2f)"%(EER,EER_thresh,EER_FAR,EER_FRR))
-        avg_EER += batch_avg_EER/(batch_id+1)
-    avg_EER = avg_EER / hp.test.epochs
-    print("\n EER across {0} epochs: {1:.4f}".format(hp.test.epochs, avg_EER))
+                enrollment_embeddings = embedder_net(enrollment_batch)
+                verification_embeddings = embedder_net(verification_batch)
+
+                enrollment_embeddings = torch.unsqueeze(enrollment_embeddings, 0)
+                verification_embeddings = torch.unsqueeze(verification_embeddings, 0)
+
+                enrollment_centroids = get_centroids(enrollment_embeddings)
+
+                embedding_flat = torch.flatten(verification_embeddings)
+                centroid_flat = torch.flatten(enrollment_centroids)
+
+                distance = F.cosine_similarity(embedding_flat, centroid_flat, 0)
+                
+                if speaker_enrollment == speaker_verification:
+                    same_person_result.append(distance.item())
+                else:
+                    different_person_result.append(distance.item())
+        print("Epochs: {}".format(e+1))         
+        print("Same person: %0.2f"%(np.mean(same_person_result)))
+        print("Different person: %0.2f"%(np.mean(different_person_result)))
+    
+    
+
         
 if __name__=="__main__":
-    if hp.training:
-        train(hp.model.model_path)
-    else:
-        test(hp.model.model_path)
+    # inference(hp.model.model_path)
+    inference_vivos(hp.model.model_path)
+    # if hp.training:
+    #     train(hp.model.model_path)
+    # else:
+    #     test(hp.model.model_path)

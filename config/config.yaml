@@ -1,10 +1,10 @@
 training: !!bool "true"
-device: "cpu"
-unprocessed_data: '/mnt/d/duy/data/vivos/train/waves/*/*.wav'
+device: "cuda"
+unprocessed_data: './vivos_noise/*/'
 ---
 data:
     train_path: './train_tisv'
-    train_path_unprocessed: '/mnt/d/duy/data/vivos/train/waves/*/*.wav'
+    train_path_unprocessed: './vivos_noise/*/'
     test_path: './test_tisv'
     test_path_unprocessed: '/mnt/d/duy/data/vivos/test/waves/*/*.wav'
     data_preprocessed: !!bool "true" 
@@ -14,27 +14,28 @@ data:
     hop: 0.01 #(s)
     nmels: 40 #Number of mel energies
     tisv_frame: 180 #Max number of time steps in input after preprocess
+    durations: 3 #Max length of audio
 ---   
 model:
     hidden: 768 #Number of LSTM hidden layer units
     num_layer: 3 #Number of LSTM layers
     proj: 256 #Embedding size
-    model_path: './model.model' #Model path for testing, inference, or resuming training
+    model_path: './speech_id_checkpoint/final_epoch_2                                                                                                                                                                                                                                           000_batch_id_11.model' #Model path for testing, inference, or resuming training
 ---
 train:
-    N : 4 #Number of speakers in batch
-    M : 5 #Number of utterances per speaker
-    num_workers: 0 #number of workers for dataloader
+    N : 10 #Number of speakers in batch
+    M : 10 #Number of utterances per speaker
+    num_workers: 8 #number of workers for dataloader
     lr: 0.01 
-    epochs: 950 #Max training speaker epoch 
-    log_interval: 30 #Epochs before printing progress
+    epochs: 6000 #Max training speaker epoch 
+    log_interval: 16 #Epochs before printing progress
     log_file: './speech_id_checkpoint/Stats'
-    checkpoint_interval: 120 #Save model after x speaker epochs
+    checkpoint_interval: 500 #Save model after x speaker epochs
     checkpoint_dir: './speech_id_checkpoint'
-    restore: !!bool "false" #Resume training from previous model path
+    restore: !!bool "true" #Resume training from previous model path
 ---
 test:
     N : 4 #Number of speakers in batch
-    M : 6 #Number of utterances per speaker
+    M : 6 #Number of utterances per speaker                                                                                                                                                                                                         
     num_workers: 8 #number of workers for data laoder
     epochs: 10 #testing speaker epochs

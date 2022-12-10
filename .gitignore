@@ -1,4 +1,6 @@
-./test/
-./test_tisv/
-./train_tisv/
-./speech_id_checkpoint/
+**/test/
+**/test_tisv/
+**/train_tisv/
+**/__pycache__/
+**/vivos_noise/
+**/vivos/

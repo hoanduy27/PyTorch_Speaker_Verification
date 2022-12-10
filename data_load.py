@@ -43,7 +43,7 @@ class SpeakerDatasetTIMIT(Dataset):
         for f in wav_files:
             _, mel_db, _ = mfccs_and_spec(f, wav_process = True)
             mel_dbs.append(mel_db)
-        return torch.Tensor(mel_dbs)
+        return torch.Tensor(np.array(mel_dbs)), speaker
 
 class SpeakerDatasetTIMITPreprocessed(Dataset):
     

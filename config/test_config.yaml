@@ -4,9 +4,9 @@ unprocessed_data: './vivos/test/waves/*/*.wav'
 ---
 data:
     train_path: './train_tisv'
-    train_path_unprocessed: './vivos/train/waves/*/*.wav'
+    train_path_unprocessed: '/home/duckhoan/Documents/Code/icassp-2020-se-rvae/noisy_audio/*/*.wav'
     test_path: './test_tisv'
-    test_path_unprocessed: './vivos/test/waves/*/*.wav'
+    test_path_unprocessed: '/home/duckhoan/Documents/Code/icassp-2020-se-rvae/noisy_audio/*/*.wav'
     data_preprocessed: !!bool "false" 
     sr: 16000
     nfft: 512 #For mel spectrogram preprocess
@@ -14,13 +14,13 @@ data:
     hop: 0.01 #(s)
     nmels: 40 #Number of mel energies
     tisv_frame: 180 #Max number of time steps in input after preprocess
-    durations: 4 #Max length of audio
+    durations: 3 #Max length of audio
 ---   
 model:
     hidden: 768 #Number of LSTM hidden layer units
     num_layer: 3 #Number of LSTM layers
     proj: 256 #Embedding size
-    model_path: './speech_id_checkpoint/final_epoch_6000_batch_id_4.model' #Model path for testing, inference, or resuming training
+    model_path: './speech_id_checkpoint_ge2e_vivos/final_epoch_20000_batch_id_4.model' #Model path for testing, inference, or resuming training
 ---
 train:
     N : 4 #Number of speakers in batch

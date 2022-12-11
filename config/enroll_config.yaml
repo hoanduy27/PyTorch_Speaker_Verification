@@ -1,26 +1,26 @@
 training: !!bool "false"
 device: "cuda"
-unprocessed_data: '../vivos/train/waves/*/*.wav'
+unprocessed_data: './vivos/train/waves/*/*.wav'
 ---
 data:
     train_path: './train_tisv'
-    train_path_unprocessed: '/mnt/d/duy/data/vivos/train/waves/*/*.wav'
+    train_path_unprocessed: './test/enroll/*/'
     test_path: './test_tisv'
-    test_path_unprocessed: '/mnt/d/duy/data/vivos/test/waves/*/*.wav'
-    data_preprocessed: !!bool "true" 
+    test_path_unprocessed: './test/pred/*/'
+    data_preprocessed: !!bool "false" 
     sr: 16000
     nfft: 512 #For mel spectrogram preprocess
     window: 0.025 #(s)
     hop: 0.01 #(s)
     nmels: 40 #Number of mel energies
     tisv_frame: 180 #Max number of time steps in input after preprocess
-    durations: 4 #Max length of audio
+    durations: 3 #Max length of audio
 ---   
 model:
     hidden: 768 #Number of LSTM hidden layer units
     num_layer: 3 #Number of LSTM layers
     proj: 256 #Embedding size
-    model_path: './speech_id_checkpoint/final_epoch_6000_batch_id_4.model' #Model path for testing, inference, or resuming training
+    model_path: './speech_id_checkpoint/final_epoch_10000_batch_id_4.model' #Model path for testing, inference, or resuming training
 ---
 train:
     N : 1 #Number of speakers in batch
